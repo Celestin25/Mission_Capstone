@@ -20,7 +20,9 @@ This app leverages a Machine Learning (ML) model to predict heart disease based 
 
 ### GitHub Repository Structure
 1. **README.md**: Provides detailed instructions for setting up and running the project.
-2. **Model Files**: Includes Jupyter notebooks (`Mentalhealth_Chatbot.ipynb`) and Python scripts (`models.py`, `predictions.py`), detailing the model's development and deployment.
+2. **Model Files**: Includes Jupyter notebooks (`Mentalhealth_Chatbot.ipynb`) and Python scripts (`myapp.py`, `predictions.py`), detailing the model's development and deployment.
+## Repo link :
+https://github.com/Celestin25/Mission_Capstone.git
 3. **Deployment Files**: Contains all necessary configurations for deploying the model on a cloud platform.
 4. **URL**: Link to the deployed app ().
 
