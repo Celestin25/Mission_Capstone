@@ -1,55 +1,138 @@
 import os
-import pickle
+import json
+import re
 import streamlit as st
 from streamlit_option_menu import option_menu
 
-st.set_page_config(page_title="Health Assistant",
-                   layout="wide",
-                   page_icon="🧑‍⚕️")
+# Load necessary files and data
 working_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Load English Mental Health dataset (intents.json)
+intents_file_path_en = os.path.join(working_dir, 'intents.json')
+try:
+    with open(intents_file_path_en, 'r') as file:
+        intents_data_en = json.load(file)
+except FileNotFoundError:
+    st.error("The 'intents.json' file was not found. Please ensure it is placed in the correct directory.")
+    st.stop()
+except json.JSONDecodeError:
+    st.error("Error decoding the 'intents.json' file. Please ensure it is in the correct JSON format.")
+    st.stop()
 
-heart_disease_model = pickle.load(open(f'{working_dir}/saved_models/heart_disease_model.sav', 'rb'))
+# Load Kinyarwanda Mental Health Q&A dataset (kiny.json)
+intents_file_path_rw = os.path.join(working_dir, 'kiny.json')
+try:
+    with open(intents_file_path_rw, 'r') as file:
+        intents_data_rw = json.load(file)
+except FileNotFoundError:
+    st.error("The 'kiny.json' file was not found. Please ensure it is placed in the correct directory.")
+    st.stop()
+except json.JSONDecodeError:
+    st.error("Error decoding the 'kiny.json' file. Please ensure it is in the correct JSON format.")
+    st.stop()
+
+# Helper function to get chatbot response based on language
+def get_chatbot_response(user_query, language='en'):
+    if language == 'en':
+        intents_data = intents_data_en
+    else:
+        intents_data = intents_data_rw
+
+    for intent in intents_data['intents']:
+        for pattern in intent['patterns']:
+            if re.search(pattern.lower(), user_query.lower()):
+                return intent['responses'][0]  # Return the first response
+    return "Sorry, I don't have an answer to that question. Please consult a professional." if language == 'en' else "Mbabarira, sinabashije kubona igisubizo cy'icyo kibazo. Mwihangane mubaze muganga."
+
+# Streamlit setup
+st.set_page_config(page_title="Mental Health Assistant", layout="wide", page_icon="🧠")
 
 with st.sidebar:
-    selected = option_menu('Disease Prediction System',
-                           ['Heart Disease Prediction'],
-                           menu_icon='hospital-fill',
-                           icons=['heart'],
+    selected = option_menu('Mental Health Assistant', 
+                           ['Mental Health (English)', 'Ubuzima bwo mumutwe (Kinyarwanda)'], 
+                           menu_icon='hospital-fill', 
+                           icons=['info-circle', 'info-circle'], 
                            default_index=0)
 
-if selected == 'Heart Disease Prediction':
-    st.title('Heart Disease Prediction using ML')
-    st.markdown("Please fill out the following details to predict the presence of heart disease.")
+# Initialize session state to keep track of chat history
+if 'chat_history' not in st.session_state:
+    st.session_state['chat_history'] = []
 
-   
-    col1, col2, col3 = st.columns(3)
+# Define function to add question and response to the chat history
+def add_to_chat(user_query, response):
+    st.session_state['chat_history'].append({"query": user_query, "response": response})
 
-    with col1:
-        age = st.number_input('Age', min_value=1, max_value=120, help='Enter your age in years.')
-        trestbps = st.number_input('Resting Blood Pressure (mm Hg)', min_value=50, max_value=300, help='Normal range: 90-120')
-        restecg = st.selectbox('Resting Electrocardiographic Results', options=[0, 1, 2], format_func=lambda x: {0: "Normal", 1: "ST-T Wave Abnormality", 2: "Probable or Definite Left Ventricular Hypertrophy"}[x], help="0: Normal, 1: ST-T wave abnormality, 2: Probable LVH")
-        oldpeak = st.number_input('ST Depression Induced by Exercise', min_value=0.0, max_value=10.0, step=0.1, help='Depression amount measured in depression')
-        ca = st.number_input('Major Vessels Colored by Flouroscopy', min_value=0, max_value=4, help='Number of major vessels colored by flouroscopy')
+# Display chat history
+if st.session_state['chat_history']:
+    for chat in st.session_state['chat_history']:
+        st.write(f"**You:** {chat['query']}")
+        st.write(f"**Bot:** {chat['response']}")
 
-    with col2:
-        sex = st.selectbox('Sex', options=[0, 1], format_func=lambda x: {0: "Female", 1: "Male"}[x], help='0: Female, 1: Male')
-        chol = st.number_input('Serum Cholestoral (mg/dl)', min_value=100, max_value=700, help='Normal range: 125-200 mg/dL')
-        thalach = st.number_input('Maximum Heart Rate Achieved', min_value=60, max_value=250, help='Enter the max heart rate achieved during exercise')
-        slope = st.selectbox('Slope of the Peak Exercise ST Segment', options=[0, 1, 2], format_func=lambda x: {0: "Upsloping", 1: "Flat", 2: "Downsloping"}[x], help="0: Upsloping, 1: Flat, 2: Downsloping")
+# Function to display chat input box with an embedded arrow
+def chat_input_box(key, language, placeholder_text):
+    # CSS for the input box and button
+    st.markdown("""
+    <style>
+    .input-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: 1px solid #CCC;
+        padding: 5px;
+        border-radius: 10px;
+        width: 100%;
+    }
+    .input-textarea {
+        width: 100%;
+        border: none;
+        outline: none;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+    .input-button {
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 10px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    .input-button:hover {
+        background-color: #45a049;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    with col3:
-        cp = st.selectbox('Chest Pain Type', options=[0, 1, 2, 3], format_func=lambda x: {0: "Typical Angina", 1: "Atypical Angina", 2: "Non-Anginal Pain", 3: "Asymptomatic"}[x], help='Type of chest pain experienced')
-        fbs = st.radio('Fasting Blood Sugar > 120 mg/dl', options=[0, 1], format_func=lambda x: {0: "False", 1: "True"}[x], help='0: False, 1: True')
-        exang = st.radio('Exercise Induced Angina', options=[0, 1], format_func=lambda x: {0: "No", 1: "Yes"}[x], help='0: No, 1: Yes')
-        thal = st.selectbox('Thalassemia', options=[0, 1, 2, 3], format_func=lambda x: {0: "Normal", 1: "Fixed Defect", 2: "Reversible Defect", 3: "Other"}[x], help="Type of thalassemia")
+    # HTML for the arrow button only
+    query = st.text_input(placeholder_text, "", key=key)
+    
+    if st.button("→", key=f"{key}_arrow"):
+        if query:
+            response = get_chatbot_response(query, language=language)
+            add_to_chat(query, response)
+            st.experimental_rerun()  # Rerun to display updated chat history
 
-    if st.button('Heart Disease Test Result'):
-        user_input = [age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]
-        try:
-            heart_prediction = heart_disease_model.predict([user_input])
-            heart_diagnosis = 'The person is having heart disease' if heart_prediction[0] == 1 else 'The person does not have any heart disease'
-            st.success(heart_diagnosis)
-        except Exception as e:
-            st.error(f"Error in prediction: {e}")
+
+# English Mental Health Q&A Session
+if selected == 'Mental Health (English)':
+    st.title("Mental Health (English)")
+    st.write("Ask me anything about mental health, and I will try to assist you with answers.")
+    
+    # Display chat input box for English with English placeholder
+    chat_input_box("chat_en", "en", "Type your message...")
+
+# Kinyarwanda Ubuzima bwo mumutwe Session
+elif selected == 'Ubuzima bwo mumutwe (Kinyarwanda)':
+    st.title("Ubuzima bwo mumutwe (Kinyarwanda)")
+    st.write("Mumbaze ibibazo byose bijyanye n'ubuzima bwo mumutwe, kandi ngerageze kubisubiza.")
+
+    # Display chat input box for Kinyarwanda with Kinyarwanda placeholder
+    chat_input_box("chat_rw", "rw", "Andika ubutumwa bwawe ...")
+
+
+
+
+
 

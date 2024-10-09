@@ -39,6 +39,8 @@ Ensure you have Python and the necessary packages (`tensorflow`, `numpy`, `panda
 ![Chatbot in English](./english%20chatbot.png)
 ![Chatbot in Kinyarwanda](./kinyarwanda%20chatbot.png)
 
+## Link of video demo
+link:https://www.loom.com/share/011d55c3bccb45f888dae9a894d58310?sid=770b4dfd-1717-4d9e-b0fa-29f8f3d5bafa
 
 ### Setup
 1. Clone the repository:
