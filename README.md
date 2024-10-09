@@ -35,6 +35,10 @@ https://github.com/Celestin25/Mission_Capstone.git
 ### Prerequisites
 Ensure you have Python and the necessary packages (`tensorflow`, `numpy`, `pandas`, `scikit-learn`) installed.
 
+## Screenshots of the app interfaces
+![Chatbot in English](kinyarwanda chatbot.png)
+![Chatbot in English](english chatbot.png)
+
 ### Setup
 1. Clone the repository:
 2. Install dependencies:
