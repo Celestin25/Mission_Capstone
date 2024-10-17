@@ -4,9 +4,11 @@ import re
 import streamlit as st
 from streamlit_option_menu import option_menu
 
+# Set the custom page title and icon
+st.set_page_config(page_title="Chatbot Assistant", page_icon="🤖")
+
 # Load necessary files and data
 working_dir = os.path.dirname(os.path.abspath(__file__))
-
 # Load English Mental Health dataset (intents.json)
 intents_file_path_en = os.path.join(working_dir, 'intents.json')
 try:
